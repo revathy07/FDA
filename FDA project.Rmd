@@ -1,0 +1,683 @@
+---
+title: "fda4"
+author: "21MIA1016 REVATHY P"
+date: "`r Sys.Date()`"
+output: html_document
+---
+```{r}
+# Load necessary libraries
+library(data.table)
+
+# Load the CSV files
+time_series_dt <- fread("C:/Users/revat/Downloads/fda proj/time_series_clean.csv")
+demographics_dt <- fread("C:/Users/revat/Downloads/fda proj/demographics_clean.csv")
+persons_of_concern_dt <- fread("C:/Users/revat/Downloads/fda proj/persons_of_concern_clean.csv")
+# View the first few rows of each dataset
+head(time_series_dt)
+head(demographics_dt)
+head(persons_of_concern_dt)
+
+```
+
+```{r}
+# Check for missing values in each dataset
+colSums(is.na(time_series_dt))       # Check for missing values in time_series dataset
+colSums(is.na(demographics_dt))       # Check for missing values in demographics dataset
+colSums(is.na(persons_of_concern_dt)) # Check for missing values in persons_of_concern dataset
+
+```
+```{r}
+summary(time_series_dt)
+summary(demographics_dt)
+summary(persons_of_concern_dt)
+```
+```{r}
+# Load necessary libraries
+library(data.table)
+
+# Function to check for non-numeric values in a column
+check_non_numeric <- function(column) {
+  return(which(is.na(suppressWarnings(as.numeric(column))) & column != ""))
+}
+
+# Function to clean non-numeric values by removing non-numeric characters
+clean_non_numeric <- function(column) {
+  return(gsub("[^0-9.]", "", column))  # Remove all non-numeric characters
+}
+
+# Apply the cleaning and conversion to numeric on demographics dataset
+demographics_dt[, `:=`(
+  `Female 0-4` = as.numeric(clean_non_numeric(`Female 0-4`)),
+  `Female 5-11` = as.numeric(clean_non_numeric(`Female 5-11`)),
+  `Female 5-17` = as.numeric(clean_non_numeric(`Female 5-17`)),
+  `Female 12-17` = as.numeric(clean_non_numeric(`Female 12-17`)),
+  `Female 18-59` = as.numeric(clean_non_numeric(`Female 18-59`)),
+  `Female 60+` = as.numeric(clean_non_numeric(`Female 60+`)),
+  `F: Unknown` = as.numeric(clean_non_numeric(`F: Unknown`)),
+  `F: Total` = as.numeric(clean_non_numeric(`F: Total`)),
+  `Male 0-4` = as.numeric(clean_non_numeric(`Male 0-4`)),
+  `Male 5-11` = as.numeric(clean_non_numeric(`Male 5-11`)),
+  `Male 5-17` = as.numeric(clean_non_numeric(`Male 5-17`)),
+  `Male 12-17` = as.numeric(clean_non_numeric(`Male 12-17`)),
+  `Male 18-59` = as.numeric(clean_non_numeric(`Male 18-59`)),
+  `Male 60+` = as.numeric(clean_non_numeric(`Male 60+`)),
+  `M: Unknown` = as.numeric(clean_non_numeric(`M: Unknown`)),
+  `M: Total` = as.numeric(clean_non_numeric(`M: Total`))
+)]
+
+# Apply the cleaning and conversion to numeric on persons_of_concern dataset
+persons_of_concern_dt[, `:=`(
+  `Refugees (incl. refugee-like situations)` = as.numeric(clean_non_numeric(`Refugees (incl. refugee-like situations)`)),
+  `Asylum-seekers (pending cases)` = as.numeric(clean_non_numeric(`Asylum-seekers (pending cases)`)),
+  `Returned refugees` = as.numeric(clean_non_numeric(`Returned refugees`)),
+  `Internally displaced persons (IDPs)` = as.numeric(clean_non_numeric(`Internally displaced persons (IDPs)`)),
+  `Returned IDPs` = as.numeric(clean_non_numeric(`Returned IDPs`)),
+  `Stateless persons` = as.numeric(clean_non_numeric(`Stateless persons`)),
+  `Others of concern` = as.numeric(clean_non_numeric(`Others of concern`)),
+  `Total Population` = as.numeric(clean_non_numeric(`Total Population`))
+)]
+
+# Check for NAs and structure after conversion
+summary(demographics_dt)
+summary(persons_of_concern_dt)
+
+# Optionally, check for any remaining non-numeric entries
+non_numeric_female_0_4 <- check_non_numeric(demographics_dt$`Female 0-4`)
+non_numeric_female_5_11 <- check_non_numeric(demographics_dt$`Female 5-11`)
+print(non_numeric_female_0_4)  # Should return an empty list if there are no remaining non-numeric values
+print(non_numeric_female_5_11)
+
+```
+```{r}
+# Impute missing values in demographics_dt with the mean for numerical columns
+demographics_dt[, `:=`(
+  `Female 0-4` = ifelse(is.na(`Female 0-4`), mean(`Female 0-4`, na.rm = TRUE), `Female 0-4`),
+  `Female 5-11` = ifelse(is.na(`Female 5-11`), mean(`Female 5-11`, na.rm = TRUE), `Female 5-11`),
+  `Female 5-17` = ifelse(is.na(`Female 5-17`), mean(`Female 5-17`, na.rm = TRUE), `Female 5-17`),
+  `Female 12-17` = ifelse(is.na(`Female 12-17`), mean(`Female 12-17`, na.rm = TRUE), `Female 12-17`),
+  `Female 18-59` = ifelse(is.na(`Female 18-59`), mean(`Female 18-59`, na.rm = TRUE), `Female 18-59`),
+  `Female 60+` = ifelse(is.na(`Female 60+`), mean(`Female 60+`, na.rm = TRUE), `Female 60+`),
+  `F: Unknown` = ifelse(is.na(`F: Unknown`), mean(`F: Unknown`, na.rm = TRUE), `F: Unknown`),
+  `F: Total` = ifelse(is.na(`F: Total`), mean(`F: Total`, na.rm = TRUE), `F: Total`),
+  `Male 0-4` = ifelse(is.na(`Male 0-4`), mean(`Male 0-4`, na.rm = TRUE), `Male 0-4`),
+  `Male 5-11` = ifelse(is.na(`Male 5-11`), mean(`Male 5-11`, na.rm = TRUE), `Male 5-11`),
+  `Male 5-17` = ifelse(is.na(`Male 5-17`), mean(`Male 5-17`, na.rm = TRUE), `Male 5-17`),
+  `Male 12-17` = ifelse(is.na(`Male 12-17`), mean(`Male 12-17`, na.rm = TRUE), `Male 12-17`),
+  `Male 18-59` = ifelse(is.na(`Male 18-59`), mean(`Male 18-59`, na.rm = TRUE), `Male 18-59`),
+  `Male 60+` = ifelse(is.na(`Male 60+`), mean(`Male 60+`, na.rm = TRUE), `Male 60+`),
+  `M: Unknown` = ifelse(is.na(`M: Unknown`), mean(`M: Unknown`, na.rm = TRUE), `M: Unknown`),
+  `M: Total` = ifelse(is.na(`M: Total`), mean(`M: Total`, na.rm = TRUE), `M: Total`)
+)]
+
+
+```
+
+```{r}
+summary(demographics_dt)
+```
+```{r}
+# Impute missing values in persons_of_concern_dt with the mean for numerical columns
+persons_of_concern_dt[, `:=`(
+  `Refugees (incl. refugee-like situations)` = ifelse(is.na(`Refugees (incl. refugee-like situations)`), mean(`Refugees (incl. refugee-like situations)`, na.rm = TRUE), `Refugees (incl. refugee-like situations)`),
+  `Asylum-seekers (pending cases)` = ifelse(is.na(`Asylum-seekers (pending cases)`), mean(`Asylum-seekers (pending cases)`, na.rm = TRUE), `Asylum-seekers (pending cases)`),
+  `Returned refugees` = ifelse(is.na(`Returned refugees`), mean(`Returned refugees`, na.rm = TRUE), `Returned refugees`),
+  `Internally displaced persons (IDPs)` = ifelse(is.na(`Internally displaced persons (IDPs)`), mean(`Internally displaced persons (IDPs)`, na.rm = TRUE), `Internally displaced persons (IDPs)`),
+  `Returned IDPs` = ifelse(is.na(`Returned IDPs`), mean(`Returned IDPs`, na.rm = TRUE), `Returned IDPs`),
+  `Stateless persons` = ifelse(is.na(`Stateless persons`), mean(`Stateless persons`, na.rm = TRUE), `Stateless persons`),
+  `Others of concern` = ifelse(is.na(`Others of concern`), mean(`Others of concern`, na.rm = TRUE), `Others of concern`),
+  `Total Population` = ifelse(is.na(`Total Population`), mean(`Total Population`, na.rm = TRUE), `Total Population`)
+)]
+summary(persons_of_concern_dt)
+```
+```{r}
+# Check the summary of time_series_dt
+summary(time_series_dt)
+
+# If needed, convert 'Value' column to numeric and impute missing values
+time_series_dt[, Value := as.numeric(gsub("[^0-9.-]", "", Value))]
+time_series_dt[, Value := ifelse(is.na(Value), mean(Value, na.rm = TRUE), Value)]
+
+# Check the summary again after conversion and imputation
+summary(time_series_dt)
+
+```
+```{r}
+# Set the target variable for migration flow prediction
+library(caret)
+target_migration <- "Total Population"
+
+# Define the features (exclude non-numeric or irrelevant columns)
+features_migration <- setdiff(names(persons_of_concern_dt), c(target_migration, "Country / territory of asylum/residence", "Origin", "Year"))
+
+# Split the data into training and test sets (80% training, 20% testing)
+set.seed(123)
+trainIndex_migration <- createDataPartition(persons_of_concern_dt[[target_migration]], p = 0.8, list = FALSE)
+train_data_migration <- persons_of_concern_dt[trainIndex_migration, ]
+test_data_migration <- persons_of_concern_dt[-trainIndex_migration, ]
+
+# Check the structure of the training data to ensure it's ready
+str(train_data_migration)
+
+```
+
+```{r}
+# Convert the training and test data to data.frames
+train_data_migration_df <- as.data.frame(train_data_migration)
+test_data_migration_df <- as.data.frame(test_data_migration)
+
+# Clean column names by replacing spaces and special characters with underscores
+clean_column_names <- function(df) {
+  names(df) <- gsub(" ", "_", names(df))            # Replace spaces with underscores
+  names(df) <- gsub("\\(|\\)", "", names(df))       # Remove parentheses
+  names(df) <- gsub("-", "_", names(df))            # Replace hyphens with underscores
+  names(df) <- gsub("\\.", "", names(df))           # Remove periods
+  return(df)
+}
+
+# Apply the cleaning function to both train and test data
+train_data_migration_df <- clean_column_names(train_data_migration_df)
+test_data_migration_df <- clean_column_names(test_data_migration_df)
+
+# View the cleaned column names to ensure they've been renamed correctly
+colnames(train_data_migration_df)
+
+```
+
+```{r}
+library(randomForest)
+
+# Redefine the target and features based on the cleaned column names
+target_migration <- "Total_Population"
+features_migration <- setdiff(names(train_data_migration_df), c(target_migration, "Country_/_territory_of_asylum/residence", "Origin", "Year"))
+
+# Train the Random Forest model using the cleaned column names
+rf_migration <- randomForest(as.formula(paste(target_migration, "~ .")), 
+                             data = train_data_migration_df[, c(features_migration, target_migration)], 
+                             ntree = 100)
+
+# View the trained model details
+print(rf_migration)
+
+
+
+```
+```{r}
+# Make predictions on the test set
+rf_predictions_migration <- predict(rf_migration, newdata = test_data_migration_df[, features_migration])
+
+# Calculate RMSE (Root Mean Squared Error)
+rmse_migration <- sqrt(mean((rf_predictions_migration - test_data_migration_df[[target_migration]])^2))
+cat("RMSE (Random Forest - Migration Flow):", rmse_migration)
+
+# Calculate R-squared
+r_squared_migration <- cor(rf_predictions_migration, test_data_migration_df[[target_migration]])^2
+cat("R-squared (Random Forest - Migration Flow):", r_squared_migration)
+
+```
+```{r}
+# View feature importance for the Random Forest model
+importance(rf_migration)
+
+# Plot feature importance
+varImpPlot(rf_migration)
+
+```
+```{r}
+new_data <- data.frame(
+  Year = 2030,
+  Country = "Australia",   # Replace with actual values
+  Origin = "Various/Unknown",     # Replace with actual values
+  Refugees_incl_refugee_like_situations = 5000,  # Example values
+  Asylum_seekers_pending_cases = 1000,           # Example values
+  Returned_refugees = 200,                       # Example values
+  Internally_displaced_persons_IDPs = 10000,     # Example values
+  Returned_IDPs = 300,                           # Example values
+  Stateless_persons = 1500,                      # Example values
+  Others_of_concern = 500                        # Example values
+)
+
+# Predict Total Population for 2030
+prediction_2030 <- predict(rf_migration, new_data)
+
+cat("Predicted Total Population for 2030:", prediction_2030, "\n")
+```
+
+```{r}
+# Install gbm package if not already installed
+# install.packages("gbm")
+library(gbm)
+
+# Train a Gradient Boosting model for migration flow prediction
+gbm_migration <- gbm(Total_Population ~ ., 
+                     data = train_data_migration_df[, c(features_migration, target_migration)], 
+                     distribution = "gaussian", 
+                     n.trees = 100, 
+                     interaction.depth = 3, 
+                     shrinkage = 0.01, 
+                     cv.folds = 5, 
+                     n.minobsinnode = 10)
+
+# View the trained model details
+print(gbm_migration)
+
+```
+
+```{r}
+# Make predictions on the test set
+gbm_predictions_migration <- predict(gbm_migration, newdata = test_data_migration_df[, features_migration], n.trees = 100)
+
+# Calculate RMSE (Root Mean Squared Error)
+rmse_gbm_migration <- sqrt(mean((gbm_predictions_migration - test_data_migration_df[[target_migration]])^2))
+cat("RMSE (Gradient Boosting - Migration Flow):", rmse_gbm_migration)
+
+# Calculate R-squared
+r_squared_gbm_migration <- cor(gbm_predictions_migration, test_data_migration_df[[target_migration]])^2
+cat("R-squared (Gradient Boosting - Migration Flow):", r_squared_gbm_migration)
+
+```
+
+```{r}
+# Train a Linear Regression model for migration flow prediction
+lm_migration <- lm(Total_Population ~ ., data = train_data_migration_df[, c(features_migration, target_migration)])
+
+# View the trained model summary
+summary(lm_migration)
+
+```
+
+```{r}
+# Make predictions on the test set
+lm_predictions_migration <- predict(lm_migration, newdata = test_data_migration_df[, features_migration])
+
+# Calculate RMSE (Root Mean Squared Error)
+rmse_lm_migration <- sqrt(mean((lm_predictions_migration - test_data_migration_df[[target_migration]])^2))
+cat("RMSE (Linear Regression - Migration Flow):", rmse_lm_migration)
+
+# Calculate R-squared
+r_squared_lm_migration <- cor(lm_predictions_migration, test_data_migration_df[[target_migration]])^2
+cat("R-squared (Linear Regression - Migration Flow):", r_squared_lm_migration)
+
+```
+
+```{r}
+# Install the xgboost package if not already installed
+# install.packages("xgboost")
+library(xgboost)
+
+# Convert the training data into a DMatrix for XGBoost
+dtrain <- xgb.DMatrix(data = as.matrix(train_data_migration_df[, features_migration]), label = train_data_migration_df[[target_migration]])
+
+# Train an XGBoost model for migration flow prediction
+xgb_migration <- xgboost(data = dtrain, 
+                         max.depth = 6, 
+                         nrounds = 100, 
+                         objective = "reg:squarederror", 
+                         eta = 0.1, 
+                         verbose = 0)
+
+# View model details
+print(xgb_migration)
+      
+```
+```{r}
+# Convert the test data into a DMatrix for XGBoost
+dtest <- xgb.DMatrix(data = as.matrix(test_data_migration_df[, features_migration]))
+
+# Make predictions on the test set
+xgb_predictions_migration <- predict(xgb_migration, newdata = dtest)
+
+# Calculate RMSE (Root Mean Squared Error)
+rmse_xgb_migration <- sqrt(mean((xgb_predictions_migration - test_data_migration_df[[target_migration]])^2))
+cat("RMSE (XGBoost - Migration Flow):", rmse_xgb_migration)
+
+# Calculate R-squared
+r_squared_xgb_migration <- cor(xgb_predictions_migration, test_data_migration_df[[target_migration]])^2
+cat("R-squared (XGBoost - Migration Flow):", r_squared_xgb_migration)
+
+```
+
+
+INTEGRATION SUCCESS
+
+
+
+```{r}
+# Load necessary libraries
+library(data.table)
+
+# Load datasets
+time_series <- fread("C:/Users/revat/Downloads/fda proj/time_series.csv")
+asylum_seekers <- fread("C:/Users/revat/Downloads/fda proj/asylum_seekers.csv")
+asylum_seekers_monthly <- fread("C:/Users/revat/Downloads/fda proj/asylum_seekers_monthly.csv")
+demographics <- fread("C:/Users/revat/Downloads/fda proj/demographics.csv")
+persons_of_concern <- fread("C:/Users/revat/Downloads/fda proj/persons_of_concern.csv")
+resettlement <- fread("C:/Users/revat/Downloads/fda proj/resettlement.csv")
+
+# View summaries of each dataset
+summary(time_series)
+summary(asylum_seekers)
+summary(asylum_seekers_monthly)
+summary(demographics)
+summary(persons_of_concern)
+summary(resettlement)
+
+
+```
+```{r}
+# Merge Demographics and Resettlement on 'Country' and 'Year'
+merged_data <- merge(demographics, resettlement, by = c("Country...territory.of.asylum.residence", "Year"), all = TRUE)
+
+# Merge the Asylum Seekers dataset
+merged_data <- merge(merged_data, asylum_seekers, by = c("Country...territory.of.asylum.residence", "Year"), all = TRUE)
+
+```
+
+```{r}
+# Clean column names (replace spaces with dots and remove special characters)
+clean_column_names <- function(df) {
+  colnames(df) <- gsub(" ", ".", colnames(df))  # Replace spaces with dot
+  colnames(df) <- gsub("[[:punct:]]", "", colnames(df))  # Remove punctuation
+  return(df)
+}
+
+# Clean the column names in all datasets
+demographics <- clean_column_names(demographics)
+resettlement <- clean_column_names(resettlement)
+asylum_seekers <- clean_column_names(asylum_seekers)
+
+# Inspect column names to ensure they are cleaned
+print(colnames(demographics))
+print(colnames(resettlement))
+print(colnames(asylum_seekers))
+
+# Merge Demographics and Resettlement on 'Country' and 'Year'
+merged_data <- merge(demographics, resettlement, by = c("Countryterritoryofasylumresidence", "Year"), all = TRUE)
+
+# Merge Asylum Seekers dataset with the previously merged data
+merged_data <- merge(merged_data, asylum_seekers, by = c("Countryterritoryofasylumresidence", "Year"), all = TRUE)
+
+# Handle missing data:
+# Impute missing numerical columns with the median
+merged_data$Female04[is.na(merged_data$Female04)] <- median(merged_data$Female04, na.rm = TRUE)
+merged_data$Female511[is.na(merged_data$Female511)] <- median(merged_data$Female511, na.rm = TRUE)
+merged_data$Male04[is.na(merged_data$Male04)] <- median(merged_data$Male04, na.rm = TRUE)
+
+# Impute missing categorical columns (e.g., 'Origin.x', 'Origin.y') with the mode
+merged_data$Originx[is.na(merged_data$Originx)] <- names(sort(table(merged_data$Originx), decreasing = TRUE))[1]
+merged_data$Originy[is.na(merged_data$Originy)] <- names(sort(table(merged_data$Originy), decreasing = TRUE))[1]
+
+# Remove unnecessary columns (e.g., columns that have excessive missing data or redundant information)
+merged_data <- merged_data %>%
+  select(-c("LocationName", "RSDproceduretypelevel", "ofwhichUNHCRassistedstartyear",
+            "Totapendingstartyear", "Appliedduringyear", "decisionsrecognized",
+            "decisionsother", "Rejected", "Otherwiseclosed", "Totaldecisions",
+            "Totalpendingendyear", "ofwhichUNHCRassistedendyear"))
+
+# Check the cleaned data structure
+str(merged_data)
+```
+
+```{r}
+# Check the structure and summary of the Value column
+str(resettlement$Value)
+summary(resettlement$Value)
+
+# Convert Value to numeric if it contains any non-numeric characters
+resettlement$Value <- as.numeric(gsub("[^0-9.-]", "", resettlement$Value))
+
+# Define Integration_Success based on Value as an alternative criterion
+# Assuming that a non-zero Value might indicate integration success
+resettlement$Integration_Success <- ifelse(resettlement$Value > 0, 1, 0)
+
+# Verify the new Integration_Success column
+table(resettlement$Integration_Success)
+
+```
+
+```{r}
+# Convert Value to numeric by removing any non-numeric characters
+resettlement$Value <- as.numeric(gsub("[^0-9.-]", "", resettlement$Value))
+
+# Check for missing or NA values after conversion
+resettlement$Value[is.na(resettlement$Value)] <- 0
+
+# Define Integration_Success based on Value (1 for success if Value > 0, otherwise 0)
+resettlement$Integration_Success <- ifelse(resettlement$Value > 0, 1, 0)
+
+# Verify the results
+table(resettlement$Integration_Success)
+summary(resettlement$Value)
+
+```
+
+```{r}
+# Load the dplyr package for renaming columns easily
+library(dplyr)
+
+# Replace spaces and special characters in column names with underscores
+names(resettlement) <- make.names(names(resettlement), unique = TRUE)
+
+# View updated column names
+print(names(resettlement))
+
+```
+```{r}
+# Count unique elements in the column
+unique_count <- length(unique(resettlement$Integration_Success))
+# Get a frequency table of unique elements in the column
+unique_elements_count <- table(resettlement$Integration_Success)
+
+# Print the frequency table
+print(unique_elements_count)
+
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+```{r}
+# Step 1: Reload the full data and inspect it before splitting
+# Assuming the full data is stored in `resettlement` (or similar original dataset)
+cat("Total Rows in Full Dataset:", nrow(resettlement), "\n")
+print(summary(resettlement))
+
+# Step 2: Re-split the data with a specified seed for consistency
+set.seed(123)
+split_index <- sample(1:nrow(resettlement), size = 0.4 * nrow(resettlement))
+train_data <- resettlement[split_index, ]
+test_data <- resettlement[-split_index, ]
+
+# Confirm row counts in both splits
+cat("Re-split Train Data Rows:", nrow(train_data), "\n")
+cat("Re-split Test Data Rows:", nrow(test_data), "\n")
+
+# Step 3: Check for NAs in critical columns
+# Display count of NAs for key columns in train and test datasets
+cat("NA Counts in Training Data:\n")
+print(colSums(is.na(train_data)))
+cat("NA Counts in Testing Data:\n")
+print(colSums(is.na(test_data)))
+
+# Step 4: Clean the data carefully, focusing on categorical columns
+train_data_cleaned <- train_data %>%
+  mutate(
+    Country...territory.of.asylum.residence = as.numeric(as.factor(Country...territory.of.asylum.residence)),
+    Origin = as.numeric(as.factor(Origin)),
+    Integration_Success = as.factor(Integration_Success)
+  )
+
+test_data_cleaned <- test_data %>%
+  mutate(
+    Country...territory.of.asylum.residence = as.numeric(as.factor(Country...territory.of.asylum.residence)),
+    Origin = as.numeric(as.factor(Origin)),
+    Integration_Success = as.factor(Integration_Success)
+  )
+
+# Step 5: Ensure there are no rows removed in this step
+cat("Cleaned Train Data Rows:", nrow(train_data_cleaned), "\n")
+cat("Cleaned Test Data Rows:", nrow(test_data_cleaned), "\n")
+
+# Step 6: Handle NAs in a way that doesn't impact row count
+train_data_cleaned[is.na(train_data_cleaned)] <- 0
+test_data_cleaned[is.na(test_data_cleaned)] <- 0
+
+# Check row counts after NA handling
+cat("Final Train Data Rows:", nrow(train_data_cleaned), "\n")
+cat("Final Test Data Rows:", nrow(test_data_cleaned), "\n")
+
+# Step 7: Continue with model training only if test data is non-empty
+if (nrow(test_data_cleaned) > 0) {
+  # Prepare data for model training and testing
+  # (Continue with model code as needed)
+} else {
+  cat("Test data is empty even after cleaning. Further investigation may be needed.")
+}
+
+
+```
+
+
+
+```{r}
+# Load required libraries
+library(randomForest)
+library(caret)
+
+# Ensure Integration_Success is a factor for classification
+train_data_cleaned$Integration_Success <- as.factor(train_data_cleaned$Integration_Success)
+test_data_cleaned$Integration_Success <- as.factor(test_data_cleaned$Integration_Success)
+
+# Train the Random Forest model
+set.seed(123)
+rf_model <- randomForest(
+  Integration_Success ~ ., 
+  data = train_data_cleaned,
+  ntree = 50
+)
+
+# Print model summary
+print(rf_model)
+
+# Predict on the test set
+rf_predictions <- predict(rf_model, test_data_cleaned)
+
+# Evaluate model performance
+conf_matrix <- confusionMatrix(rf_predictions, test_data_cleaned$Integration_Success)
+print(conf_matrix)
+
+# Additional metrics
+accuracy <- conf_matrix$overall['Accuracy']
+cat("Model Accuracy: ", accuracy, "\n")
+
+```
+
+```{r}
+library(gbm)
+# Convert Integration_Success to numeric 0 and 1 values
+train_data_cleaned$Integration_Success <- as.numeric(as.character(train_data_cleaned$Integration_Success))
+test_data_cleaned$Integration_Success <- as.numeric(as.character(test_data_cleaned$Integration_Success))
+
+# Verify the structure to ensure Integration_Success is numeric
+str(train_data_cleaned$Integration_Success)
+str(test_data_cleaned$Integration_Success)
+
+# Gradient Boosting Model with corrected Integration_Success format
+set.seed(123)
+gbm_model <- gbm(
+  formula = Integration_Success ~ .,
+  data = train_data_cleaned,
+  distribution = "bernoulli",
+  n.trees = 100,
+  interaction.depth = 3,
+  shrinkage = 0.1,
+  cv.folds = 5
+)
+
+# Determine the best iteration based on cross-validation
+best_iter <- gbm.perf(gbm_model, method = "cv")
+
+# Make predictions on the test set
+gbm_predictions <- predict(gbm_model, test_data_cleaned, n.trees = best_iter, type = "response")
+gbm_class_predictions <- ifelse(gbm_predictions > 0.1, 1, 0)
+
+# Evaluate model performance
+conf_matrix_gbm <- confusionMatrix(as.factor(gbm_class_predictions), as.factor(test_data_cleaned$Integration_Success))
+print(conf_matrix_gbm)
+
+
+```
+
+```{r}
+# Load required libraries
+library(dplyr)
+library(tidyr)
+library(xgboost)
+library(caret)
+
+# Step 1: Convert categorical columns to factors, then to numeric
+train_data_cleaned <- train_data %>%
+  mutate(
+    Country...territory.of.asylum.residence = as.numeric(as.factor(Country...territory.of.asylum.residence)),
+    Origin = as.numeric(as.factor(Origin)),
+    Integration_Success = as.numeric(as.character(Integration_Success))
+  )
+
+test_data_cleaned <- test_data %>%
+  mutate(
+    Country...territory.of.asylum.residence = as.numeric(as.factor(Country...territory.of.asylum.residence)),
+    Origin = as.numeric(as.factor(Origin)),
+    Integration_Success = as.numeric(as.character(Integration_Success))
+  )
+
+# Step 2: Handle any NAs in the data
+train_data_cleaned[is.na(train_data_cleaned)] <- 0
+test_data_cleaned[is.na(test_data_cleaned)] <- 0
+
+# Step 3: Verify structure of data
+str(train_data_cleaned)
+str(test_data_cleaned)
+
+# Prepare data for XGBoost
+train_matrix <- xgb.DMatrix(data = as.matrix(train_data_cleaned %>% select(-Integration_Success)),
+                            label = train_data_cleaned$Integration_Success)
+test_matrix <- xgb.DMatrix(data = as.matrix(test_data_cleaned %>% select(-Integration_Success)))
+
+# Define XGBoost parameters for binary classification
+params <- list(
+  objective = "binary:logistic",  # Binary classification
+  max_depth = 6,
+  eta = 0.1,
+  eval_metric = "logloss"         # Logarithmic loss for binary classification
+)
+
+# Step 4: Train the XGBoost model
+set.seed(123)
+xgb_model <- xgb.train(
+  params = params,
+  data = train_matrix,
+  nrounds = 1,
+  verbose = 1
+)
+
+# Step 5: Make predictions on the test data
+xgb_predictions <- predict(xgb_model, test_matrix)
+xgb_class_predictions <- ifelse(xgb_predictions > 0.5, 1, 0)
+
+# Step 6: Evaluate model performance
+confusion_matrix_xgb <- confusionMatrix(as.factor(xgb_class_predictions), as.factor(test_data_cleaned$Integration_Success))
+print(confusion_matrix_xgb)
+
+
+
+```
+
